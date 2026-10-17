@@ -1,41 +1,16 @@
-# Dependencies
 node_modules/
 frontend/node_modules/
 backend/node_modules/
-
-# Environment variables and secrets
 .env
-.env.*
-!.env.example
 .env.local
 .env.*.local
-
-# Build output
+.DS_Store
 dist/
 build/
-coverage/
-
-# Vite and caches
-.vite/
-.cache/
-
-# Logs
 *.log
 
-# SQLite databases and temporary files
-*.db
-*.sqlite
-*.sqlite3
-*.db-shm
-*.db-wal
 
-# macOS
-.DS_Store
+.vite
 
-# Local development databases
-*.db
-*.db-journal
-*.sqlite
+
 *.sqlite3
-*.db-shm
-*.db-wal
