@@ -1,5 +1,5 @@
 // frontend/src/api.ts
-const BASE = "http://localhost:4000/api";
+const BASE = `${import.meta.env.VITE_API_URL || "http://localhost:4000"}/api`;
 
 export type UserRole = "EMPLOYEE" | "MANAGER" | "ADMIN";
 
@@ -11,11 +11,11 @@ export interface DemoUser {
 }
 
 export const DEMO_USERS: DemoUser[] = [
-  { id: "alice",  label: "Alice (Employee – Engineering)",  role: "EMPLOYEE", department: "Engineering" },
-  { id: "bob",    label: "Bob (Employee – Engineering)",    role: "EMPLOYEE", department: "Engineering" },
-  { id: "carol",  label: "Carol (Manager – Engineering)",  role: "MANAGER",  department: "Engineering" },
-  { id: "david",  label: "David (Employee – Finance)",     role: "EMPLOYEE", department: "Finance" },
-  { id: "admin",  label: "Admin (Admin – Operations)",     role: "ADMIN",    department: "Operations" },
+  { id: "alice", label: "Alice (Employee – Engineering)", role: "EMPLOYEE", department: "Engineering" },
+  { id: "bob", label: "Bob (Employee – Engineering)", role: "EMPLOYEE", department: "Engineering" },
+  { id: "carol", label: "Carol (Manager – Engineering)", role: "MANAGER", department: "Engineering" },
+  { id: "david", label: "David (Employee – Finance)", role: "EMPLOYEE", department: "Finance" },
+  { id: "admin", label: "Admin (Admin – Operations)", role: "ADMIN", department: "Operations" },
 ];
 
 function headers(userId?: string) {
@@ -61,12 +61,12 @@ export const api = {
     to?: string;
   }, userId?: string) => {
     const q = new URLSearchParams();
-    if (params.page)     q.set("page",     String(params.page));
+    if (params.page) q.set("page", String(params.page));
     if (params.pageSize) q.set("pageSize", String(params.pageSize));
     if (params.decision) q.set("decision", params.decision);
-    if (params.action)   q.set("action",   params.action);
-    if (params.from)     q.set("from",     params.from);
-    if (params.to)       q.set("to",       params.to);
+    if (params.action) q.set("action", params.action);
+    if (params.from) q.set("from", params.from);
+    if (params.to) q.set("to", params.to);
     return get<{
       items: AuditEvent[];
       pagination: { page: number; pageSize: number; total: number };
