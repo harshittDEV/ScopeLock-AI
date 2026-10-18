@@ -9,8 +9,11 @@
     "dev:frontend": "npm run dev --prefix frontend",
     "dev:backend": "npm run dev --prefix backend",
     "dev": "npm run dev:frontend & npm run dev:backend",
-    "test": "npm run test --workspaces",
+    "test": "npm run test --workspaces --if-present",
     "build": "npm run build --workspaces"
+  },
+  "engines": {
+    "node": ">=20.0.0 <23.0.0"
   },
   "devDependencies": {
     "@types/node": "^26.6.5",
