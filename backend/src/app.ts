@@ -10,6 +10,7 @@ import adminRouter from "./routes/admin";
 import toolsRouter from "./routes/tools";
 import metricsRouter from "./routes/metrics";
 import auditRouter from "./routes/audit";
+import agentRouter from "./routes/agent";
 import { requestIdMiddleware } from "./middleware/requestId";
 import { errorHandler } from "./middleware/errorHandler";
 
@@ -52,6 +53,7 @@ app.use("/api/admin", adminRouter);
 app.use("/api/tools", toolsRouter);
 app.use("/api/metrics", metricsRouter);
 app.use("/api/audit", auditRouter);
+app.use("/api/agent", agentRouter);
 
 // Centralized error handling (must be after routes)
 app.use(errorHandler);

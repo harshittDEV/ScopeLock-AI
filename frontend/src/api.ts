@@ -99,3 +99,70 @@ export interface AuditEvent {
   outcome: string | null;
   metadata: string | null;
 }
+
+// ── AI Agent types ──────────────────────────────────────────────────────────
+// These mirror the /api/agent/propose response shape exactly.
+
+export interface ProposedAction {
+  action:       string;
+  resourceType: string;
+  resourceId:   string;
+  rationale?:   string;
+}
+
+export interface ActionAuthorization {
+  decision:      "ALLOW" | "DENY";
+  reasonCode:    string;
+  decisionId:    string;
+  policyVersion: string;
+}
+
+export interface ActionExecution {
+  attempted: boolean;
+  success:   boolean;
+  data?:     unknown;
+  error?:    string;
+}
+
+export interface ActionResult {
+  proposed:      ProposedAction;
+  authorization: ActionAuthorization;
+  execution:     ActionExecution;
+}
+
+export interface AgentProposalResponse {
+  aiAvailable:           boolean;
+  correlationId?:        string;
+  interpretation?:       string;
+  clarificationRequired: boolean;
+  clarificationMessage?: string;
+  actions:               ActionResult[];
+  error?: {
+    kind:    string;
+    message: string;
+  };
+}
+
+export interface AgentStatusResponse {
+  configured: boolean;
+  provider:   string | null;
+  model:      string | null;
+  baseUrl:    string | null;
+}
+
+// ── Extended api object ─────────────────────────────────────────────────────
+Object.assign(api, {
+  agentStatus: (userId?: string) =>
+    get<AgentStatusResponse>("/agent/status", userId),
+
+  proposeAction: (message: string, userId: string) =>
+    post<AgentProposalResponse>("/agent/propose", { message }, userId),
+});
+
+// Type-augmented accessor (avoids re-declaring api const)
+export const agentApi = {
+  status:  (userId?: string) => get<AgentStatusResponse>("/agent/status", userId),
+  propose: (message: string, userId: string) =>
+    post<AgentProposalResponse>("/agent/propose", { message }, userId),
+};
+

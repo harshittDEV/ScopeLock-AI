@@ -1,16 +1,30 @@
 node_modules/
 frontend/node_modules/
 backend/node_modules/
+
+# Environment files — NEVER commit secrets
 .env
 .env.local
 .env.*.local
-.DS_Store
+
+# Build outputs
 dist/
 build/
+backend/dist/
+
+# Logs
 *.log
 
-
+# Vite cache
 .vite
 
-
+# SQLite databases (contain demo data — not production data)
 *.sqlite3
+*.db
+dev.db
+
+# macOS metadata
+.DS_Store
+
+# Ollama model cache — never commit downloaded model weights
+.ollama/
