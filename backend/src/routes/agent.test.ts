@@ -90,6 +90,15 @@ describe("POST /api/agent/propose", () => {
     expect(r.body.actions[0].execution.success).toBe(true);
     // Returned data must include employee record
     expect(r.body.actions[0].execution.data).toBeDefined();
+    // Injected principal context must be passed to the model
+    expect(mockGenerate).toHaveBeenCalledWith(
+      "my profile",
+      expect.objectContaining({
+        employeeId: "employee_101",
+        role: "EMPLOYEE",
+        department: "Engineering",
+      })
+    );
   });
 
   it("DENY + no execution — alice reads bob's profile (cross-user)", async () => {

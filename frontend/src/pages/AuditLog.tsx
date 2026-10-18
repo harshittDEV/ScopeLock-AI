@@ -278,7 +278,7 @@ export default function AuditLog() {
               ["Decision",     selected.decision],
               ["Reason",       selected.reason_code],
               ["Policy",       selected.policy_version],
-              ["Correlation",  selected.correlation_id?.slice(0, 18) + "…" ?? "—"],
+              ["Correlation",  selected.correlation_id ? selected.correlation_id.slice(0, 18) + "…" : "—"],
               ["Outcome",      selected.outcome ?? "—"],
             ].map(([k, v]) => (
               <div key={k} className="info-row">

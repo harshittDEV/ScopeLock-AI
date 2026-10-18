@@ -1,9 +1,9 @@
 // backend/src/auth.ts
 import { Request, Response, NextFunction } from "express";
-import { getUserById } from "./database.js";
-import { Principal } from "./types.js";
-import { CONFIG } from "./config.js";
-import { createHttpError } from "./middleware/errorHandler.js";
+import { getUserById } from "./database";
+import { Principal } from "./types";
+import { CONFIG } from "./config";
+import { createHttpError } from "./middleware/errorHandler";
 
 /**
  * Demo identity authentication middleware.

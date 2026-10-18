@@ -1,7 +1,7 @@
 // backend/src/database.ts
 import Database from "better-sqlite3";
 import { CONFIG } from "./config";
-import { Role, Principal } from "./types.js";
+import { Role, Principal } from "./types";
 import { randomUUID } from "crypto";
 
 // Initialize DB connection (singleton)

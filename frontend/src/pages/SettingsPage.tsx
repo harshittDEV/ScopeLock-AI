@@ -1,4 +1,4 @@
-import { Settings, Info, ExternalLink } from "lucide-react";
+import { Info, ExternalLink } from "lucide-react";
 import { useUser } from "../context/UserContext";
 
 const STACK = [

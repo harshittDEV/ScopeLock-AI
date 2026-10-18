@@ -5,56 +5,11 @@
 // NEVER exposes credentials or model output to the browser directly —
 // all validation happens here before results leave this module.
 
-import { CONFIG } from "../config.js";
-import { AiProposalSchema, type AiProposal, ALLOWED_ACTIONS, ALLOWED_RESOURCE_IDS } from "./schema.js";
+import { CONFIG } from "../config";
+import { AiProposalSchema, type AiProposal, ALLOWED_ACTIONS, ALLOWED_RESOURCE_IDS, type PrincipalContext } from "./schema";
+import { buildSystemPrompt } from "./prompts";
 
-const SYSTEM_PROMPT = `You are a structured action proposer for ScopeLock AI — an authorization firewall for AI agents.
-
-Your ONLY job: interpret a user's natural-language request and respond with a valid JSON object.
-You must NOT authorize actions yourself. You must NOT invent tools, resources, or permissions.
-You must NOT claim that any action is safe. Authorization is handled by a separate server-side policy engine.
-
-AVAILABLE ACTIONS (only these, no others):
-- read_own_profile   → read the requesting user's own employee profile
-- read_salary        → read salary information (own record, or dept-scoped for managers)
-- list_department_employees → list employees in the user's department (managers only)
-- update_department  → change an employee's department assignment (admin only)
-- delete_record      → permanently delete an employee record (admin only)
-
-AVAILABLE RESOURCE TYPE: "employee" (only)
-
-AVAILABLE RESOURCE IDs (only these):
-employee_101 (Alice), employee_102 (Bob), employee_103 (Carol), employee_104 (David), employee_105 (Admin)
-
-If the user's request matches known actions, respond with this JSON shape:
-{
-  "interpretation": "<one sentence explaining what you understood>",
-  "clarificationRequired": false,
-  "proposedActions": [
-    {
-      "action": "<one of the allowed actions>",
-      "resourceType": "employee",
-      "resourceId": "<one of the allowed resource IDs>",
-      "rationale": "<why this action matches the request>"
-    }
-  ]
-}
-
-If the request is ambiguous, unclear, or cannot map to any known action, respond with:
-{
-  "interpretation": "<what you understood>",
-  "clarificationRequired": true,
-  "clarificationMessage": "<ask the user for more detail>",
-  "proposedActions": []
-}
-
-RULES:
-1. Output ONLY the raw JSON object. No markdown, no explanation, no backticks.
-2. Do not invent action names.
-3. Do not include "authorized: true" or any authorization claim.
-4. Do not reference external systems, URLs, or databases beyond the schema above.
-5. Keep all string values under 300 characters.
-6. Maximum 5 proposed actions.`;
+// System prompt is built per-request with optional principal context (see prompts.ts)
 
 export interface OllamaClientError {
   kind: "unavailable" | "timeout" | "invalid_response" | "validation_error";
@@ -93,7 +48,7 @@ function extractJson(raw: string): string {
  * Model output is NEVER returned raw — it is validated against AiProposalSchema
  * before this function returns.
  */
-export async function proposeWithOllama(userMessage: string): Promise<OllamaResult> {
+export async function proposeWithOllama(userMessage: string, principal?: PrincipalContext): Promise<OllamaResult> {
   const { baseUrl, model, timeoutMs } = CONFIG.ai;
   const url = `${baseUrl}/api/chat`;
 
@@ -113,7 +68,7 @@ export async function proposeWithOllama(userMessage: string): Promise<OllamaResu
           options: { temperature: 0, seed: 42, num_predict: 512 },
           format: "json",   // Ollama structured output hint (ignored by models that don't support it)
           messages: [
-            { role: "system",  content: SYSTEM_PROMPT },
+            { role: "system",  content: buildSystemPrompt(principal) },
             { role: "user",    content: safeMessage },
           ],
         }),

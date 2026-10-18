@@ -24,6 +24,15 @@ export const ALLOWED_RESOURCE_IDS = [
   "employee_105",
 ] as const;
 
+// Employee ID → Name mapping (used only in system prompt context, never for auth)
+export const EMPLOYEE_NAMES: Record<string, string> = {
+  employee_101: "Alice",
+  employee_102: "Bob",
+  employee_103: "Carol",
+  employee_104: "David",
+  employee_105: "Admin",
+};
+
 export const ProposedToolCallSchema = z.object({
   action:       z.enum(ALLOWED_ACTIONS, {
     errorMap: () => ({ message: "Unknown or unsupported action" }),
@@ -50,3 +59,18 @@ export const AiProposalSchema = z.object({
 
 export type AiProposal      = z.infer<typeof AiProposalSchema>;
 export type ProposedToolCall = z.infer<typeof ProposedToolCallSchema>;
+
+/**
+ * Context about the calling principal, passed to the AI adapter so the
+ * system prompt can reference the user's identity without the model guessing.
+ * This is display-only context — authorization decisions are NEVER derived
+ * from anything the model says about permissions.
+ */
+export interface PrincipalContext {
+  /** Server-assigned employee resource ID (e.g. "employee_101") */
+  employeeId: string;
+  /** Role as a string for display purposes only */
+  role: string;
+  /** Department name for display purposes only */
+  department: string;
+}

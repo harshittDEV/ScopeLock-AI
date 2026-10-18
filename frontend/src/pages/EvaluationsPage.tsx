@@ -1,5 +1,4 @@
-import { FlaskConical, Construction } from "lucide-react";
-import { EmptyState } from "../components/EmptyState";
+import { Construction } from "lucide-react";
 
 export default function EvaluationsPage() {
   return (

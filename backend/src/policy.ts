@@ -1,6 +1,6 @@
 // backend/src/policy.ts
-import { Principal, ActionRequest, Decision, Role } from "./types.js";
-import { recordAudit } from "./database.js";
+import { Principal, ActionRequest, Decision, Role } from "./types";
+import { recordAudit } from "./database";
 import { randomUUID } from "crypto";
 
 const POLICY_VERSION = "1.0";
@@ -8,7 +8,7 @@ const POLICY_VERSION = "1.0";
 // Map user IDs to their employee record IDs
 const USER_EMPLOYEE_MAP: Record<string, string> = {
   alice: "employee_101",
-  bob:   "employee_102",
+  bob: "employee_102",
   carol: "employee_103",
   david: "employee_104",
   admin: "employee_105",

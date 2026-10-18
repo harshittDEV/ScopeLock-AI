@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { DEMO_AGENTS, type DemoAgent } from "../fixtures/agents";
-import { AgentStatusBadge, DecisionBadge } from "../components/StatusBadge";
+import { AgentStatusBadge } from "../components/StatusBadge";
 import { EmptyState } from "../components/EmptyState";
 import { Bot, Search, X, ExternalLink, Activity } from "lucide-react";
 

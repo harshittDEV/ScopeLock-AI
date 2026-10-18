@@ -2,7 +2,7 @@
 import { CheckCircle2, XCircle, AlertTriangle, Info, Circle } from "lucide-react";
 
 type DecisionType = "ALLOW" | "DENY";
-type StatusType = "active" | "idle" | "error" | "draft" | "active_status" | "deprecated";
+export type StatusType = "active" | "idle" | "error" | "draft" | "active_status" | "deprecated";
 
 interface DecisionBadgeProps {
   decision: DecisionType;

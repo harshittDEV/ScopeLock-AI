@@ -214,7 +214,7 @@ function ProposalCard({ response }: { response: AgentProposalResponse }) {
                 </div>
 
                 {/* Execution result data */}
-                {ar.execution.attempted && ar.execution.success && ar.execution.data && (
+                {ar.execution.attempted && ar.execution.success && ar.execution.data != null && (
                   <div style={{ marginTop:"var(--sp-3)" }}>
                     <div style={{ fontSize:"9.5px", fontWeight:700, textTransform:"uppercase", letterSpacing:"0.08em", color:"var(--success)", marginBottom:6, display:"flex", alignItems:"center", gap:5 }}>
                       <Eye size={10} />

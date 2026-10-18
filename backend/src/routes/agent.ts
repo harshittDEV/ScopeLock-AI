@@ -20,13 +20,26 @@
 //   - Client cannot elevate permissions by manipulating request fields.
 
 import { Router, Request, Response } from "express";
-import { demoAuthMiddleware, requirePrincipal } from "../auth.js";
-import { evaluatePolicy } from "../policy.js";
-import { generateProposal, isAiConfigured } from "../ai/aiService.js";
-import { recordAudit, getEmployeeById, listEmployeesByDepartment } from "../database.js";
-import { CONFIG } from "../config.js";
+import { demoAuthMiddleware, requirePrincipal } from "../auth";
+import { evaluatePolicy } from "../policy";
+import { generateProposal, isAiConfigured } from "../ai/aiService";
+import { recordAudit, getEmployeeById, listEmployeesByDepartment } from "../database";
+import { CONFIG } from "../config";
 import { randomUUID } from "crypto";
-import type { Principal, ActionRequest } from "../types.js";
+import type { Principal, ActionRequest } from "../types";
+import type { PrincipalContext } from "../ai/schema";
+
+// ── User-ID → Employee-ID mapping ─────────────────────────────────────────────
+// The demo dataset seeds specific employee IDs for each user.
+// Used to inject principal context into the AI system prompt (display-only).
+// Authorization is NEVER derived from this mapping.
+const USER_EMPLOYEE_ID: Record<string, string> = {
+  alice: "employee_101",
+  bob: "employee_102",
+  carol: "employee_103",
+  david: "employee_104",
+  admin: "employee_105",
+};
 
 const router = Router();
 router.use(demoAuthMiddleware);
@@ -36,9 +49,9 @@ router.use(demoAuthMiddleware);
 type ToolResult = { success: boolean; data?: unknown; error?: string };
 
 async function executeTool(
-  action:       string,
-  resourceId:   string,
-  principal:    Principal
+  action: string,
+  resourceId: string,
+  principal: Principal
 ): Promise<ToolResult> {
   switch (action) {
     case "read_own_profile": {
@@ -105,14 +118,21 @@ router.post("/propose", async (req: Request, res: Response) => {
     return res.status(503).json({
       aiAvailable: false,
       error: {
-        kind:    "unavailable",
+        kind: "unavailable",
         message: "No AI provider is configured. Set AI_PROVIDER=ollama, AI_BASE_URL, AI_MODEL in environment variables.",
       },
     });
   }
 
-  // 4. Generate structured proposal from the AI model
-  const proposalResult = await generateProposal(message);
+  // 4. Build principal context for the AI system prompt (display-only, never used for auth)
+  const aiPrincipal: PrincipalContext = {
+    employeeId: USER_EMPLOYEE_ID[principal.id] ?? "employee_101",
+    role: principal.role,
+    department: principal.department,
+  };
+
+  // 5. Generate structured proposal from the AI model
+  const proposalResult = await generateProposal(message, aiPrincipal);
   if (!proposalResult.ok) {
     return res.status(503).json({
       aiAvailable: true,
@@ -126,11 +146,11 @@ router.post("/propose", async (req: Request, res: Response) => {
   // 5. If clarification is needed, return early (no actions evaluated)
   if (proposal.clarificationRequired) {
     return res.json({
-      aiAvailable:  true,
+      aiAvailable: true,
       correlationId,
-      interpretation:       proposal.interpretation,
+      interpretation: proposal.interpretation,
       clarificationRequired: true,
-      clarificationMessage:  proposal.clarificationMessage,
+      clarificationMessage: proposal.clarificationMessage,
       actions: [],
     });
   }
@@ -140,9 +160,9 @@ router.post("/propose", async (req: Request, res: Response) => {
 
   for (const proposed of proposal.proposedActions) {
     const actionReq: ActionRequest & { correlationId?: string } = {
-      action:       proposed.action,
+      action: proposed.action,
       resourceType: proposed.resourceType,
-      resourceId:   proposed.resourceId,
+      resourceId: proposed.resourceId,
       correlationId,
     };
 
@@ -160,54 +180,54 @@ router.post("/propose", async (req: Request, res: Response) => {
 
       // Update audit record outcome (record audit again with outcome)
       recordAudit({
-        principalId:   principal.id,
-        action:        proposed.action,
-        resourceType:  proposed.resourceType,
-        resourceId:    proposed.resourceId,
-        decision:      "ALLOW",
-        reasonCode:    decision.reasonCode + "_OUTCOME",
+        principalId: principal.id,
+        action: proposed.action,
+        resourceType: proposed.resourceType,
+        resourceId: proposed.resourceId,
+        decision: "ALLOW",
+        reasonCode: decision.reasonCode + "_OUTCOME",
         policyVersion: decision.policyVersion,
         correlationId,
         outcome,
-        metadata:      executionResult.success ? undefined : executionResult.error,
+        metadata: executionResult.success ? undefined : executionResult.error,
       });
     }
 
     actionResults.push({
       proposed: {
-        action:       proposed.action,
+        action: proposed.action,
         resourceType: proposed.resourceType,
-        resourceId:   proposed.resourceId,
-        rationale:    proposed.rationale,
+        resourceId: proposed.resourceId,
+        rationale: proposed.rationale,
       },
       authorization: {
-        decision:    decision.decision,
-        reasonCode:  decision.reasonCode,
-        decisionId:  decision.decisionId,
+        decision: decision.decision,
+        reasonCode: decision.reasonCode,
+        decisionId: decision.decisionId,
         policyVersion: decision.policyVersion,
       },
       execution: allowed
         ? {
-            attempted: true,
-            success:   executionResult!.success,
-            data:      executionResult!.success ? executionResult!.data : undefined,
-            error:     executionResult!.success ? undefined : executionResult!.error,
-          }
+          attempted: true,
+          success: executionResult!.success,
+          data: executionResult!.success ? executionResult!.data : undefined,
+          error: executionResult!.success ? undefined : executionResult!.error,
+        }
         : {
-            attempted: false,
-            success:   false,
-            error:     "Action was denied — no execution attempted.",
-          },
+          attempted: false,
+          success: false,
+          error: "Action was denied — no execution attempted.",
+        },
     });
   }
 
   // 8. Return the full structured result
   return res.json({
-    aiAvailable:           true,
+    aiAvailable: true,
     correlationId,
-    interpretation:        proposal.interpretation,
+    interpretation: proposal.interpretation,
     clarificationRequired: false,
-    actions:               actionResults,
+    actions: actionResults,
   });
 });
 
@@ -217,9 +237,9 @@ router.get("/status", (_req: Request, res: Response) => {
   const { provider, model, baseUrl } = CONFIG.ai;
   res.json({
     configured: isAiConfigured(),
-    provider:   provider || null,
-    model:      model || null,
-    baseUrl:    provider ? baseUrl : null, // only expose when configured
+    provider: provider || null,
+    model: model || null,
+    baseUrl: provider ? baseUrl : null, // only expose when configured
   });
 });
 
